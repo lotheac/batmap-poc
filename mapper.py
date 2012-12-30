@@ -10,8 +10,31 @@ except ImportError:
     pass
 
 class MapFrame(wx.Frame):
+    '''Frame that contains the entire UI.'''
+
     def __init__(self, parent, title):
-        wx.Frame.__init__(self, parent, wx.ID_ANY, title=title, size=(200,100))
+        wx.Frame.__init__(self, parent, wx.ID_ANY, title=title)
+        MapWindow(self)
+
+class MapWindow(wx.Window):
+    '''Window that contains the map graph.'''
+
+    def __init__(self, *args, **kwargs):
+        super(MapWindow, self).__init__(*args, **kwargs)
+        self.SetBackgroundColour('WHITE')
+        events = {
+            wx.EVT_MOTION: self.motion,
+            wx.EVT_SIZE:   self.resize,
+        }
+        for event, handler in events.items():
+            self.Bind(event, handler)
+
+    def resize(self, event):
+        pass
+
+    def motion(self, event):
+        if event.Dragging() and event.LeftIsDown():
+            print 'left mouse is down'
 
 class GUIThread(threading.Thread):
 
