@@ -14,7 +14,7 @@ class TestRoomParser(unittest.TestCase):
         self.area = Area('test area')
         self.rooms = {
             'nw': 'nw.\nnorthwest room\nObvious exits are: s and e.',
-            'ne': 'ne.\nnortheast room\nObvious exits are: w and sw.',
+            'ne': 'ne.\nnortheast room\nwith multiline desc\nObvious exits are: w and sw.',
             'sw': 'sw.\nsouthwest room\nObvious exits are: n, ne and e.',
             'se': 'se.\nsoutheast room\nObvious exit is: west.',
             'o': 'o.\norphan room\nThere are no obvious exits.',
@@ -29,6 +29,12 @@ class TestRoomParser(unittest.TestCase):
                                                       'east']))
         self.assertEqual(self.rooms['se'].exits, set(['west']))
         self.assertEqual(self.rooms['o'].exits, set())
+
+    def test_brief(self):
+        self.assertEqual(self.rooms['o'].brief, 'o')
+
+    def test_desc(self):
+        self.assertEqual(self.rooms['ne'].desc, 'northeast room\nwith multiline desc')
 
 if __name__ == '__main__':
     unittest.main()
