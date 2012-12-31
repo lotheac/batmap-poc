@@ -61,13 +61,17 @@ class Room(object):
 
     @classmethod
     def fromstring(cls, area, roomstr):
-        brief, desc, exitstr = roomstr.split('\n')
+        parts = roomstr.split('\n')
+        brief = parts[0].rstrip('.')
+        # desc is everything except first and last line
+        desc = '\n'.join(parts[1:-1])
+        exitstr = parts[-1]
         return cls(area, brief=brief, desc=desc, exitstr=exitstr)
 
     def __init__(self, area, brief=None, desc=None, exitstr=None):
         self.area = area
         self.brief = brief
-        self.desc = None
+        self.desc = desc
         self.exits = set()
         if exitstr:
             self.add_exits(exitstr)
