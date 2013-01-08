@@ -1,0 +1,30 @@
+!!python/object:mapper.Area
+adj: &id001
+  ne:
+    sw: &id004 {exit: sw}
+  nw:
+    ne: &id002 {exit: e}
+    sw: &id005 {exit: s}
+  o: {}
+  se: {}
+  sw:
+    se: &id003 {exit: e}
+edge: *id001
+graph: {directed: true, name: test area}
+node:
+  ne: {}
+  nw: {}
+  o: {}
+  se: {}
+  sw: {}
+pred:
+  ne:
+    nw: *id002
+  nw: {}
+  o: {}
+  se:
+    sw: *id003
+  sw:
+    ne: *id004
+    nw: *id005
+succ: *id001
