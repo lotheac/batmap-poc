@@ -2,6 +2,8 @@ import sys
 import wx
 import threading
 import networkx as nx
+import random
+import math
 
 try:
     import tf
@@ -59,6 +61,19 @@ class GUIThread(threading.Thread):
 
 class Room(object):
 
+    CARDINALS = {
+        'n': 'north',
+        'e': 'east',
+        'w': 'west',
+        's': 'south',
+        'ne': 'northeast',
+        'nw': 'northwest',
+        'se': 'southeast',
+        'sw': 'southwest',
+        'u': 'up',
+        'd': 'down',
+    }
+
     @classmethod
     def fromstring(cls, area, roomstr):
         parts = roomstr.split('\n')
@@ -83,28 +98,70 @@ class Room(object):
         exits = exitstr.split(':')[1].rstrip('.').lstrip()
         exits = exits.replace(' and ', ', ')
         exits = exits.split(', ')
-        self.exits.update(map(self._normalize_exit, exits))
+        self.exits.update(map(Room.normalize_exit, exits))
 
     @staticmethod
-    def _normalize_exit(s):
-        exitnames = {
-            'n': 'north',
-            'e': 'east',
-            'w': 'west',
-            's': 'south',
-            'ne': 'northeast',
-            'nw': 'northwest',
-            'se': 'southeast',
-            'sw': 'southwest',
-            'u': 'up',
-            'd': 'down',
-        }
-        if s in exitnames:
-            return exitnames[s]
+    def normalize_exit(s):
+        if s in Room.CARDINALS:
+            return Room.CARDINALS[s]
         return s
+
+    @staticmethod
+    def cardinal_modifier(cardinal):
+        exit = Room.normalize_exit(cardinal)
+        if not exit in Room.CARDINALS.values():
+            raise ValueError('{!r} not a cardinal direction'.format(exit))
+        modifiers = {
+            'north': (0, 1),
+            'south': (0, -1),
+            'east': (1, 0),
+            'west': (-1, 0),
+            'northwest': (-1, 1),
+            'northeast': (1, 1),
+            'southwest': (-1, -1),
+            'southeast': (1, -1),
+        }
+        return modifiers[exit]
 
 class Area(nx.DiGraph):
 
     def __init__(self, name):
         super(Area, self).__init__(directed=True)
         self.name = name
+
+    def _random_node_position(self):
+        maxpos = self.number_of_nodes()
+        if not hasattr(self, '_random'):
+            self._random = random.Random(self)
+        return (self._random.randint(0, maxpos),
+                self._random.randint(0, maxpos))
+
+    def cardinal_positions(self):
+        '''Return positions for rooms connected via exits in cardinal
+        directions.'''
+        pos = {}
+        for edge, exit in nx.get_edge_attributes(self, 'exit').items():
+            n1, n2 = edge
+            if exit in Room.CARDINALS.values():
+                if not n1 in pos:
+                    # do we have any other edges that give an idea of where
+                    # this node should go?
+                    for neighbor, attrs in self.edge[n1].items():
+                        if neighbor not in pos:
+                            continue
+                        direction = attrs.get('exit', None)
+                        if direction in Room.CARDINALS.values():
+                            pos[n1] = tuple(x - dx for x, dx in
+                                            zip(pos[neighbor],
+                                                Room.cardinal_modifier(direction)))
+                            print 'placed', n1, 'has', neighbor, direction
+                            break
+                    # place randomly if still not placed
+                    if not n1 in pos:
+                        pos[n1] = self._random_node_position()
+                        print 'placed', n1
+                if not n2 in pos:
+                    pos[n2] = tuple(x + dx for x, dx in zip(pos[n1],
+                                                            Room.cardinal_modifier(exit)))
+                    print 'placed', n2, 'to', exit, 'of', n1
+        return pos
