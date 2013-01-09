@@ -1,14 +1,16 @@
 !!python/object:mapper.Area
 adj: &id001
   ne:
-    sw: &id004 {exit: southwest}
+    sw: &id005 {exit: southwest}
   nw:
     ne: &id002 {exit: east}
-    sw: &id005 {exit: south}
-  o: {}
+    sw: &id006 {exit: south}
+  o:
+    sw: &id007 {exit: leave}
   se: {}
   sw:
-    se: &id003 {exit: east}
+    o: &id003 {exit: enter}
+    se: &id004 {exit: east}
 edge: *id001
 graph: {directed: true, name: test area}
 node:
@@ -21,10 +23,12 @@ pred:
   ne:
     nw: *id002
   nw: {}
-  o: {}
-  se:
+  o:
     sw: *id003
+  se:
+    sw: *id004
   sw:
-    ne: *id004
-    nw: *id005
+    ne: *id005
+    nw: *id006
+    o: *id007
 succ: *id001
